@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ToDo_App</title>
+    <link rel="stylesheet" href="./toDoApp.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@200;400&family=Poppins:wght@100;200&family=Roboto:wght@100&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>To do's</h1>
+      <svg
+        class="plusIcon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="40"
+        height="40"
+        viewBox="0 0 1024 1024"
+      >
+        <g transform="rotate(300 300)">
+          <path
+            d="M480 480V128a32 32 0 0 1 64 0v352h352a32 32 0 1 1 0 64H544v352a32 32 0 1 1-64 0V544H128a32 32 0 0 1 0-64h352z"
+          />
+        </g>
+      </svg>
+    </header>
+
+    <main>
+      <section id="enterToDo">
+        <form>
+          <input type="text" id="textInput" placeholder="Enter an activity" />
+          <button id="add">ADD</button>
+        </form>
+      </section>
+      <section id="todo"></section>
+    </main>
+    <footer></footer>
+    <script src="./addToDoList.js"></script>
+  </body>
+</html>
