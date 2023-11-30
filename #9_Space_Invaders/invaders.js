@@ -12,6 +12,8 @@ class Player {
       y: 0,
     };
 
+    this.rotation = 0;
+
     const image = new Image();
     image.src = "./Images/spaceship.b.png";
     image.onload = () => {
@@ -29,6 +31,20 @@ class Player {
   draw() {
     // c.fillStyle = "red";
     // c.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+    c.save();
+    c.translate(
+      player.position.x + player.width / 2,
+      player.position.y + player.height / 2
+    );
+
+    c.rotate(this.rotation);
+
+    c.translate(
+      -player.position.x - player.width / 2,
+      -player.position.y - player.height / 2
+    );
+
     if (this.image)
       c.drawImage(
         this.image,
@@ -37,14 +53,80 @@ class Player {
         this.width,
         this.height
       );
+    c.restore();
+  }
+  update() {
+    if (this.image) {
+      c.clearRect(0, 0, canvas.width, canvas.height);
+      this.draw();
+      this.position.x += this.velocity.x;
+    }
   }
 }
+
+class Projectile {
+  constructor({ position, velocity }) {
+    this.position = position;
+    this.velocity = velocity;
+
+    this.radius = 5;
+  }
+  draw() {
+    c.beginPath();
+    c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+    c.fillStyle = "red";
+    c.fill();
+    c.closePath;
+  }
+  update() {
+    this.draw();
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+}
+
 const player = new Player();
-player.draw();
+const projectiles = [];
+
+const keys = {
+  a: {
+    pressed: false,
+  },
+  d: {
+    pressed: false,
+  },
+  space: {
+    pressed: false,
+  },
+};
 
 function animate() {
   requestAnimationFrame(animate);
-  player.draw();
+  player.update();
+
+  projectiles.forEach((projectile, index) => {
+    if (projectile.position.y + projectile.radius <= 0) {
+      setTimeout(() => {
+        projectiles.splice(index, 1);
+      }, 0);
+    } else {
+      projectile.update();
+    }
+  });
+
+  if (keys.a.pressed && player.position.x >= 1) {
+    player.velocity.x = -15;
+    player.rotation = -0.2;
+  } else if (
+    keys.d.pressed &&
+    player.position.x + player.width <= canvas.width
+  ) {
+    player.velocity.x = 15;
+    player.rotation = 0.2;
+  } else {
+    player.velocity.x = 0;
+    player.rotation = 0;
+  }
 }
 animate();
 
@@ -52,12 +134,47 @@ addEventListener("keydown", ({ key }) => {
   switch (key) {
     case "a":
       console.log("left");
+      player.velocity.x = -5;
+      keys.a.pressed = true;
       break;
     case "d":
       console.log("right");
+      keys.d.pressed = true;
       break;
     case " ":
       console.log("shoot");
+      keys.space.pressed = true;
+      break;
+  }
+});
+addEventListener("keyup", ({ key }) => {
+  switch (key) {
+    case "a":
+      // console.log("left");
+      player.velocity.x = 0;
+      keys.a.pressed = false;
+      break;
+    case "d":
+      // console.log("right");
+      player.velocity.x = 0;
+      keys.d.pressed = false;
+      break;
+    case " ":
+      // console.log("space");
+      keys.a.pressed = false;
+      projectiles.push(
+        new Projectile({
+          position: {
+            x: player.position.x + player.width / 2,
+            y: player.position.y + player.height / 2 + -20,
+          },
+          velocity: {
+            x: 0,
+            y: -10,
+          },
+        })
+      );
+      // console.log(projectiles)
       break;
   }
 });
