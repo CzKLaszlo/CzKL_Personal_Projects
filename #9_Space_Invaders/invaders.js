@@ -1,225 +1,66 @@
-const canvas = document.querySelector("canvas");
-console.log(canvas);
-const c = canvas.getContext("2d");
+import EnemyController from "./EnemyController.js";
+import Player from "./Player.js";
+import BulletController from "./BulletController.js";
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-class Player {
-  constructor() {
-    this.velocity = {
-      x: 0,
-      y: 0,
-    };
+canvas.width = 800;
+canvas.height = 600;
 
-    this.rotation = 0;
+const background = new Image();
+background.src = "Images and sounds/images/space.png";
 
-    const image = new Image();
-    image.src = "./Images/spaceship.b.png";
-    image.onload = () => {
-      const scale = 0.15;
-      this.image = image;
-      this.width = image.width * scale;
-      this.height = image.height * scale;
-      this.position = {
-        x: canvas.width / 2 - this.width / 2,
-        y: canvas.height - this.height - 30,
-      };
-    };
-  }
+const playerBulletController = new BulletController(canvas, 10, "red", true);
+const enemyBulletController = new BulletController(canvas, 4, "white", false);
+const enemyController = new EnemyController(
+  canvas,
+  enemyBulletController,
+  playerBulletController
+);
+const player = new Player(canvas, 3, playerBulletController);
 
-  draw() {
-    // c.fillStyle = "red";
-    // c.fillRect(this.position.x, this.position.y, this.width, this.height);
+let isGameOver = false;
+let didWin = false;
 
-    c.save();
-    c.translate(
-      player.position.x + player.width / 2,
-      player.position.y + player.height / 2
-    );
-
-    c.rotate(this.rotation);
-
-    c.translate(
-      -player.position.x - player.width / 2,
-      -player.position.y - player.height / 2
-    );
-
-    if (this.image)
-      c.drawImage(
-        this.image,
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    c.restore();
-  }
-  update() {
-    if (this.image) {
-      c.clearRect(0, 0, canvas.width, canvas.height);
-      this.draw();
-      this.position.x += this.velocity.x;
-    }
+function game() {
+  checkGameOver();
+  ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+  displayGameOver();
+  if (!isGameOver) {
+    enemyController.draw(ctx);
+    player.draw(ctx);
+    playerBulletController.draw(ctx);
+    enemyBulletController.draw(ctx);
   }
 }
 
-class Projectile {
-  constructor({ position, velocity }) {
-    this.position = position;
-    this.velocity = velocity;
+function displayGameOver() {
+  if (isGameOver) {
+    let text = didWin ? "You Win" : "Game Over";
+    let textOffset = didWin ? 3.5 : 5;
 
-    this.radius = 5;
-  }
-  draw() {
-    c.beginPath();
-    c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
-    c.fillStyle = "red";
-    c.fill();
-    c.closePath;
-  }
-  update() {
-    this.draw();
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    ctx.fillStyle = "White";
+    ctx.font = "70px Arial";
+    ctx.fillText(text, canvas.width / textOffset, canvas.height / 2);
   }
 }
 
-class Invader {
-  constructor() {
-    this.velocity = {
-      x: 0,
-      y: 0,
-    };
-
-    const image = new Image();
-    image.src = "./Images/Alien.png";
-    image.onload = () => {
-      const scale = 1;
-      this.image = image;
-      this.width = image.width * scale;
-      this.height = image.height * scale;
-      this.position = {
-        x: canvas.width / 2 - this.width / 2,
-        y: canvas.height / 2,
-      };
-    };
+function checkGameOver() {
+  if (isGameOver) {
+    return;
   }
 
-  draw() {
-    // c.fillStyle = "red";
-    // c.fillRect(this.position.x, this.position.y, this.width, this.height);
-
-    if (this.image)
-      c.drawImage(
-        this.image,
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
+  if (enemyBulletController.collideWith(player)) {
+    isGameOver = true;
   }
-  update() {
-    if (this.image) {
-      c.clearRect(0, 0, canvas.width, canvas.height);
-      this.draw();
-      this.position.x += this.velocity.x;
-      this.position.y += this.velocity.y;
-    }
+  if (enemyController.collideWith(player)) {
+    isGameOver = true;
+  }
+  if (enemyController.enemyRows.length === 0) {
+    didWin = true;
+    isGameOver = true;
   }
 }
 
-const player = new Player();
-const projectiles = [];
-const invader = new Invader();
-const keys = {
-  a: {
-    pressed: false,
-  },
-  d: {
-    pressed: false,
-  },
-  space: {
-    pressed: false,
-  },
-};
-
-function animate() {
-  requestAnimationFrame(animate);
-  invader.update();
-  player.update();
-
-  projectiles.forEach((projectile, index) => {
-    if (projectile.position.y + projectile.radius <= 0) {
-      setTimeout(() => {
-        projectiles.splice(index, 1);
-      }, 0);
-    } else {
-      projectile.update();
-    }
-  });
-
-  if (keys.a.pressed && player.position.x >= 1) {
-    player.velocity.x = -15;
-    player.rotation = -0.2;
-  } else if (
-    keys.d.pressed &&
-    player.position.x + player.width <= canvas.width
-  ) {
-    player.velocity.x = 15;
-    player.rotation = 0.2;
-  } else {
-    player.velocity.x = 0;
-    player.rotation = 0;
-  }
-}
-animate();
-
-addEventListener("keydown", ({ key }) => {
-  switch (key) {
-    case "a":
-      console.log("left");
-      player.velocity.x = -5;
-      keys.a.pressed = true;
-      break;
-    case "d":
-      console.log("right");
-      keys.d.pressed = true;
-      break;
-    case " ":
-      console.log("shoot");
-      keys.space.pressed = true;
-      break;
-  }
-});
-addEventListener("keyup", ({ key }) => {
-  switch (key) {
-    case "a":
-      // console.log("left");
-      player.velocity.x = 0;
-      keys.a.pressed = false;
-      break;
-    case "d":
-      // console.log("right");
-      player.velocity.x = 0;
-      keys.d.pressed = false;
-      break;
-    case " ":
-      // console.log("space");
-      keys.a.pressed = false;
-      projectiles.push(
-        new Projectile({
-          position: {
-            x: player.position.x + player.width / 2,
-            y: player.position.y + player.height / 2 + -20,
-          },
-          velocity: {
-            x: 0,
-            y: -10,
-          },
-        })
-      );
-      // console.log(projectiles)
-      break;
-  }
-});
+setInterval(game, 1000 / 60);
